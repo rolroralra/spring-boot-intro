@@ -1,0 +1,49 @@
+plugins {
+    id 'java'
+}
+
+group = 'hello'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    //스프링 MVC 추가
+    implementation 'org.springframework:spring-webmvc:6.0.9'
+
+    //내장 톰켓 추가
+    implementation 'org.apache.tomcat.embed:tomcat-embed-core:10.1.6'
+
+    // slf4j + logback
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'ch.qos.logback:logback-classic:1.4.11'
+
+    // lombok
+    implementation 'org.projectlombok:lombok:1.18.28'
+    annotationProcessor 'org.projectlombok:lombok:1.18.28'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+//일반 Jar 생성
+tasks.register('buildJar', Jar) {
+    manifest {
+        attributes 'Main-Class': 'hello.embed.EmbedTomcatSpringMain'
+    }
+    with jar
+}
+
+//Fat Jar 생성
+tasks.register('buildFatJar', Jar) {
+    manifest {
+        attributes 'Main-Class': 'hello.embed.EmbedTomcatSpringMain'
+    }
+    duplicatesStrategy = DuplicatesStrategy.WARN
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}

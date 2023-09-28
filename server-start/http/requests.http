@@ -1,0 +1,17 @@
+###
+GET http://localhost:8080
+
+###
+GET http://localhost:8080/index.html
+
+###
+GET http://localhost:8080/test
+
+###
+GET http://localhost:8080/hello-servlet
+
+###
+GET http://localhost:8080/spring/hello-spring
+
+###
+GET http://localhost:8080/springboot/hello-spring

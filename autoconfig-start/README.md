@@ -259,4 +259,96 @@ public @interface SpringBootApplication {
 }
 ```
 
+# @Import, ImportSelector
+> `@Import`에 value 값으로 지정할 수 있는 경우가 4가지가 있다.
 
+1. `@Configuration` 객체
+2. `ImportSelector` 구현체
+3. `ImportBeanDefinitionRegistrar` 구현체
+4. `@Component` 와 같은 일반적인 Bean
+
+```java
+public @interface Import {
+
+	/**
+	 * {@link Configuration @Configuration}, {@link ImportSelector},
+	 * {@link ImportBeanDefinitionRegistrar}, or regular component classes to import.
+	 */
+	Class<?>[] value();
+
+}
+```
+
+## ImportSelector
+```java
+public interface ImportSelector {
+    
+	String[] selectImports(AnnotationMetadata importingClassMetadata);
+    
+	@Nullable
+	default Predicate<String> getExclusionFilter() {
+		return null;
+	}
+}
+```
+
+### 참고: ImportBeanDefinitionRegistrar
+<details>
+  <summary>인터페이스 코드</summary>
+  <p>
+
+```java
+public interface ImportBeanDefinitionRegistrar {
+
+	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
+			BeanNameGenerator importBeanNameGenerator) {
+
+		registerBeanDefinitions(importingClassMetadata, registry);
+	}
+    
+	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	}
+
+}
+```
+
+  </p>
+</details>
+
+
+# @EnableAutoConfiguration
+```java
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    // ...
+}
+```
+
+## AutoConfigurationImportSelector
+> `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일에 등록된 @AutoConfiguration 설정된 클래스들을 가져온다.
+
+## @SpringBootApplication 작동 순서
+1. `@SpringBootApplication`
+2. `@EnableAutoConfiguration`
+3. `@Import(AutoConfigurationImportSelector.class)`
+4. `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일에 등록된 자동 설정 정보 선택
+5. 해당 파일의 설정 정보가 Spring Container에 등록
+
+## @AutoConfiguration vs @Configuration
+- `@AutoConfiguration` 에는 `@Configuration` 이 포함되어 있다.
+- 하지만 `@AutoConfiguration`의 경우 일반 스프링 설정과는 라이프사이클이 다르다.
+  - `@ComponentScan` 대상이 되면 안된다.
+  - `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일에 지정해서 사용한다.
+- `AutoConfigurationExcludeFilter`
+  - `@AutoConfiguration` 을 `@ComponentScan` 대상에서 제외시킨다.
+
+```java
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+    // ...
+}
+```

@@ -3,3 +3,4 @@
 - [embed-start](./embed-start/README.md)
 - [boot-start](./boot-start/README.md)
 - [lib-start](./lib-start/README.md)
+- [auto-config-start](./autoconfig-start/README.md)

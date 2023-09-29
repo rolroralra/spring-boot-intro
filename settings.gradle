@@ -18,6 +18,7 @@ include ':external-start'
 include ':external-read-start'
 include ':lib-start'
 include ':memory:memory-v1-start'
+include ':memory:memory-v2-start'
 include ':memory:project-v1-start'
 include ':memory:project-v2-start'
 

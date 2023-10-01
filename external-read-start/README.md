@@ -291,3 +291,35 @@ my:
       - CACHE
 ```
 
+# @Profile
+- `@Profile` 을 사용해서 profile 별로 등록되는 스프링 Bean을 분리할 수 있다.
+- `@Conditional`, `ProfileCondition` 을 통해 기능 제공
+
+```java
+@Conditional(ProfileCondition.class)
+public @interface Profile {
+
+	String[] value();
+
+}
+```
+
+```java
+class ProfileCondition implements Condition {
+
+	@Override
+	public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+		MultiValueMap<String, Object> attrs = metadata.getAllAnnotationAttributes(Profile.class.getName());
+		if (attrs != null) {
+			for (Object value : attrs.get("value")) {
+				if (context.getEnvironment().acceptsProfiles(Profiles.of((String[]) value))) {
+					return true;
+				}
+			}
+			return false;
+		}
+		return true;
+	}
+
+}
+```

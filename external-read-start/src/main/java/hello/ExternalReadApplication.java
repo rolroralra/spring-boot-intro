@@ -7,6 +7,7 @@ import hello.config.MyDataSourceEnvironmentConfig;
 import hello.config.MyDataSourceValueConfig;
 import hello.datasource.MyDataSource;
 import hello.datasource.MyDataSourcePropertiesV2;
+import hello.pay.PayConfig;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
@@ -18,7 +19,7 @@ import org.springframework.context.annotation.Import;
 //@Import(MyDataSourceConfigV1.class)
 //@ConfigurationPropertiesScan(basePackageClasses = MyDataSourcePropertiesV2.class)
 @Import(MyDataSourceConfigV3.class)
-@SpringBootApplication(scanBasePackageClasses = MyDataSource.class)
+@SpringBootApplication(scanBasePackageClasses = {MyDataSource.class, PayConfig.class})
 public class ExternalReadApplication {
 
     public static void main(String[] args) {

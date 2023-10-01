@@ -7,5 +7,37 @@ my:
       max-connection: 1
       timeout: 35s
       options:
+      - LOCAL
       - CACHE
-      - ADMIN
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+my:
+  datasource:
+    url: dev.db.com
+    username: dev_user
+    password: dev_password
+    etc:
+      max-connection: 10
+      timeout: 60s
+      options:
+      - DEV
+      - CACHE
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+my:
+  datasource:
+    url: prod.db.com
+    username: prod_user
+    password: prod_password
+    etc:
+      max-connection: 50
+      timeout: 10s
+      options:
+      - PROD
+      - CACHE

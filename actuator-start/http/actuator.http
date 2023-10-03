@@ -21,3 +21,39 @@ GET localhost:8080/actuator/loggers/hello.controller
 
 ###
 GET localhost:8080/actuator/httpexchanges
+
+###
+GET localhost:8080/actuator/metrics
+
+###
+GET localhost:8080/actuator/metrics/jvm.memory.used
+
+###
+GET localhost:8080/actuator/metrics/jvm.memory.used?tag=area:heap
+
+###
+GET localhost:8080/actuator/metrics/application.started.time
+
+###
+GET localhost:8080/actuator/metrics/application.ready.time
+
+###
+GET localhost:8080/actuator/metrics/http.server.requests?tag=outcome:SUCCESS&tag=uri:/actuator/metrics/{requiredMetricName}
+
+###
+GET localhost:8080/actuator/metrics/logback.events
+
+###
+GET localhost:8080/actuator/prometheus
+
+###
+GET localhost:8080/cpu
+
+###
+GET localhost:8080/jvm
+
+###
+GET localhost:8080/jdbc
+
+###
+GET localhost:8080/error-log

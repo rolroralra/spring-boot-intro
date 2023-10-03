@@ -139,8 +139,6 @@ scrape_configs:
 - `io.micrometer.core.instrument.Counter` 를 사용한다.
 
 ```java
-
-```java
 @RequiredArgsConstructor
 public class OrderServiceV1 implements OrderService {
     

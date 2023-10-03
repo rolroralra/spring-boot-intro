@@ -59,4 +59,14 @@
     - `heapdump`
     - `conditions`
     - `configprops`
-
+- [micrometer](./actuator-start/micrometer.md)
+- [prometheus, grafana](./actuator-start/prometheus.md)
+  - Counter Metric Customizing
+    - Counter, MeterRegistry
+    - @Counted, CountedAspect
+  - Timer Metric Customizing
+    - Timer, MeterRegistry
+    - @Timed, TimedAspect
+  - Gauge Metric Customizing
+    - Gauge, MeterRegistry
+    - MeterBinder, Gauge

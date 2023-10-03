@@ -1,0 +1,23 @@
+###
+GET localhost:8080/actuator
+
+###
+GET localhost:8080/actuator/health
+
+###
+POST localhost:8080/actuator/shutdown
+
+###
+GET localhost:8080/actuator/info
+
+###
+GET localhost:8080/log
+
+###
+GET localhost:8080/actuator/loggers
+
+###
+GET localhost:8080/actuator/loggers/hello.controller
+
+###
+GET localhost:8080/actuator/httpexchanges

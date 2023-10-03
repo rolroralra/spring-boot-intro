@@ -130,3 +130,317 @@ scrape_configs:
 
 - [JVM (Micrometer)](https://grafana.com/grafana/dashboards/4701)
 
+# Custom Metric 추가
+
+[Counter - Prometheus 공식 메뉴얼](https://prometheus.io/docs/concepts/metric_types/#counter)
+
+## Counter, MeterRegistry 
+- `MeterRegistry` 는 자동으로 Bean으로 등록되어 있다.
+- `io.micrometer.core.instrument.Counter` 를 사용한다.
+
+```java
+
+```java
+@RequiredArgsConstructor
+public class OrderServiceV1 implements OrderService {
+    
+    private final MeterRegistry meterRegistry;
+
+    // ...
+  
+    @Override
+    public void order() {
+        log.info("OrderServiceV0.order");
+        stock.decrementAndGet();
+
+        Counter.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "order")
+            .description("order")
+            .register(meterRegistry).increment();
+    }
+
+    @Override
+    public void cancel() {
+        log.info("OrderServiceV0.cancel");
+        stock.incrementAndGet();
+
+        Counter.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "cancel")
+            .description("order")
+            .register(meterRegistry).increment();
+    }
+    
+    // ...
+}
+```
+
+- `MeterRegistry`를 주입받아서 사용한다.
+
+## @Counted, CountedAspect
+- `CountedAspect` Bean으로 등록해야 한다.
+- `CountedAspect`를 이용해서 AOP를 적용한다.
+
+```java
+public class OrderServiceV2 implements OrderService {
+    // ...
+  
+    @Counted("my.order")
+    @Override
+    public void order() {
+        log.info("OrderServiceV0.order");
+        stock.decrementAndGet();
+    }
+
+    @Counted("my.order")
+    @Override
+    public void cancel() {
+        log.info("OrderServiceV0.cancel");
+        stock.incrementAndGet();
+    }
+    
+    //...
+}
+```
+
+## Timer, MeterRegistry
+- `io.micrometer.core.instrument.Timer` 를 사용한다.
+- `MeterRegistry`는 자동으로 Bean으로 등록되어 있다.
+
+```java
+@RequiredArgsConstructor
+public class OrderServiceV1 implements OrderService {
+
+    private final MeterRegistry meterRegistry;
+
+    // ...
+    @Override
+    public void order() {
+        Timer timer = Timer.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "order")
+            .description("order")
+            .register(meterRegistry);
+
+        timer.record(() -> {
+            log.info("OrderServiceV3.order");
+            stock.decrementAndGet();
+            sleep(500);
+        });
+    }
+
+    @Override
+    public void cancel() {
+        Timer timer = Timer.builder("my.order")
+            .tag("class", this.getClass().getName())
+            .tag("method", "cancel")
+            .description("order")
+            .register(meterRegistry);
+
+        timer.record(() -> {
+            log.info("OrderServiceV3.cancel");
+            stock.incrementAndGet();
+            sleep(200);
+        });
+    }
+
+    //...
+}
+```
+
+### Spring Actuator Metric 확인
+- `measurementes` 항목을 보면 총 2가지 측정 항목이 추가되었다.
+  - `COUNT` : 호출 횟수
+  - `TOTAL_TIME` : 총 소요 시간
+  - `MAX` : 최대 소요 시간
+```http request
+GET http://localhost:8080/actuator/metrics/my.order
+```
+
+```json
+{
+  "name": "my.order",
+  "description": "order",
+  "baseUnit": "seconds",
+  "measurements": [
+    {
+      "statistic": "COUNT",
+      "value": 11.0
+    },
+    {
+      "statistic": "TOTAL_TIME",
+      "value": 4.801505126
+    },
+    {
+      "statistic": "MAX",
+      "value": 0.0
+    }
+  ],
+  "availableTags": [
+    {
+      "tag": "method",
+      "values": [
+        "cancel",
+        "order"
+      ]
+    },
+    {
+      "tag": "class",
+      "values": [
+        "hello.order.v3.OrderServiceV3"
+      ]
+    }
+  ]
+}
+```
+
+### Prometheus Metric 포맷 확인 
+- 다음 접두사가 붙으면서 3가지 메트릭을 제공한다.
+  - `seconds_count` : 누적 실행 수
+  - `seconds_sum` : 총 소요 시간
+  - `seconds_max` : 최대 소요 시간
+- `seconds_sum / seconds_count` : 평균 실행시간
+
+```http request
+GET http://localhost:8080/actuator/prometheus
+```
+
+```text
+# ...
+# HELP my_order_seconds order
+# TYPE my_order_seconds summary
+my_order_seconds_count{class="hello.order.v3.OrderServiceV3",method="order",} 5.0
+my_order_seconds_sum{class="hello.order.v3.OrderServiceV3",method="order",} 2.915286917
+my_order_seconds_count{class="hello.order.v3.OrderServiceV3",method="cancel",} 6.0
+my_order_seconds_sum{class="hello.order.v3.OrderServiceV3",method="cancel",} 1.886218209
+# HELP my_order_seconds_max order
+# TYPE my_order_seconds_max gauge
+my_order_seconds_max{class="hello.order.v3.OrderServiceV3",method="order",} 0.0
+my_order_seconds_max{class="hello.order.v3.OrderServiceV3",method="cancel",} 0.0
+# ...
+```
+
+## @Timed, TimedAspect
+- `TimedAspect` Bean으로 등록해야 한다.
+- `TimedAspect`를 이용해서 AOP를 적용한다.
+- `@Timed` 메서드 혹은 Class에 적용이 가능하다.
+  - Class에 적용하면 모든 `public` 메서드에 적용된다.
+
+## Gauge, MeterRegistry
+- `io.micrometer.core.instrument.Gauge` 를 사용한다.
+- `MeterRegistry`는 자동으로 Bean으로 등록되어 있다.
+
+```java
+@Configuration
+public class StockConfigV1 {
+    @Bean
+    public MyStockMetric myStockMetric(OrderService orderService, MeterRegistry meterRegistry) {
+        return new MyStockMetric(orderService, meterRegistry);
+    }
+
+    @RequiredArgsConstructor
+    @Slf4j
+    static class MyStockMetric {
+
+        private final OrderService orderService;
+
+        private final MeterRegistry meterRegistry;
+
+        @PostConstruct
+        public void init() {
+            Gauge.builder("my.stock", orderService, orderService -> {
+                    log.info("stock gauge call");
+                    return orderService.getStock().get();
+                }).description("stock")
+                .register(meterRegistry);
+        }
+    }
+}
+```
+
+### Spring Actuator Metric 확인
+```http request
+GET http://localhost:8080/actuator/metrics/my.stock
+```
+
+```json
+{
+  "name": "my.stock",
+  "description": "stock",
+  "measurements": [
+    {
+      "statistic": "VALUE",
+      "value": 100.0
+    }
+  ],
+  "availableTags": []
+}
+```
+
+### Prometheus Metric 포맷 확인
+```http request
+GET http://localhost:8080/actuator/prometheus
+```
+
+```text
+# ...
+# HELP my_stock stock
+# TYPE my_stock gauge
+my_stock 100.0
+# ...
+```
+
+## MeterBinder, Gauge
+- `io.micrometer.core.instrument.binder.MeterBinder`를 Bean으로 등록해서 Gauge 메트릭을 등록할 수 있다.
+
+```java
+public interface MeterBinder {
+
+    void bindTo(@NonNull MeterRegistry registry);
+
+}
+```
+
+```java
+@Configuration
+public class StockConfigV2 {
+    
+    @Bean
+    public MeterBinder stockMeterBinder(OrderService orderService) {
+        return registry -> Gauge.builder("my.stock", orderService, orderService ->
+                orderService.getStock().get())
+            .description("stock")
+            .register(registry);
+    }
+}
+```
+
+# Micrometer 사용법 이해
+- Counter
+- Gauge
+- Timer
+- Tags
+
+## MeterRegistry
+- Micrometer 기능을 제공하는 핵심 컴포넌트
+- Spring Actuator 를 통해서 주입 받아서 사용한다.
+- `MeterRegistry` 컴포넌트를 통해 Counter, Gauge 등을 등록한다.
+
+## Counter
+- 단조롭게 증가하는 단일 누적 측정 항목
+- Prometheus 에서는 일반적으로 이름 끝에 `_total` 이 붙는다.
+
+## Gauge
+- 임의의 숫자 값을 측정 항목으로 사용한다.
+
+## Timer
+- 시간을 측정하는데 사요오딘다.
+- `Timer`는 다음과 같은 내용을 한번에 측정한다.
+  - `seconds_count` : 측정 항목의 총 호출 수 - `Counter`
+  - `seconds_sum` : 측정 항목의 총 소요 시간 - `sum`
+  - `seconds_max` : 측정 항목의 최대 소요 시간 - `Gauge`
+  - `seconds_sum` / `seconds_count` : 측정 항목의 평균 소요 시간
+
+## Tag, Label
+- Metric을 필터링하거나, 그룹핑하는데 사용한다.

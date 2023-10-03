@@ -57,3 +57,24 @@ GET localhost:8080/jdbc
 
 ###
 GET localhost:8080/error-log
+
+###
+GET localhost:8080/order
+
+###
+GET localhost:8080/cancel
+
+###
+GET localhost:8080/stock
+
+###
+GET localhost:8080/actuator/metrics/my.order
+
+###
+GET localhost:8080/actuator/metrics/my.order?tag=method:order
+
+###
+GET localhost:8080/actuator/metrics/my.order?tag=method:cancel
+
+###
+GET http://localhost:8080/actuator/metrics/my.stock

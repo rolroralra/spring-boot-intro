@@ -76,8 +76,7 @@ public @interface ConditionalOnProperty {
 > 
 > **META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports** 파일에 등록해야, 스프링 부트가 자동 구성 대상으로 인식한다.
 
-- `resources/META-INF/spring/`
-  - `org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- `resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
   - Spring Boot는 해당 경로에 있는 파일을 읽어서, 스프링 부트 자동 구성으로 사용한다.
 - `@Configuration` 과 유사하지만, 스프링 부트 자동 구성 대상으로 지정해주어야 한다.
   - `resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 에 등록해야 한다.
